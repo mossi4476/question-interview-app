@@ -11,8 +11,18 @@
 <body>
     <div class="container">
         <header class="header">
-            <h1><i class="fas fa-code"></i> Technical Interview Practice</h1>
-            <p>Ôn luyện kỹ năng phỏng vấn kỹ thuật một cách hiệu quả</p>
+            <div class="header-content">
+                <h1><i class="fas fa-code"></i> Technical Interview Practice</h1>
+                <p>Ôn luyện kỹ năng phỏng vấn kỹ thuật một cách hiệu quả</p>
+                <div class="header-controls">
+                    <button id="themeToggle" class="theme-toggle" title="Toggle Dark Mode">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button id="soundToggle" class="sound-toggle" title="Toggle Sound">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                </div>
+            </div>
         </header>
 
         <div class="main-content">
@@ -58,7 +68,16 @@
                 <div class="quiz-header">
                     <h2 id="quizTitle">Quiz</h2>
                     <div class="quiz-progress">
-                        <span id="currentQuestion">1</span> / <span id="totalQuestions">10</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-text">
+                            <span id="currentQuestion">1</span> / <span id="totalQuestions">10</span>
+                        </div>
+                    </div>
+                    <div class="quiz-timer">
+                        <i class="fas fa-clock"></i>
+                        <span id="timerDisplay">00:00</span>
                     </div>
                 </div>
 
@@ -98,10 +117,11 @@
                         <h2>Kết quả bài thi</h2>
                     </div>
                     <div class="score-display">
-                        <div class="score-circle">
+                        <div class="score-circle" id="scoreCircle">
                             <span id="finalScore">0</span>
                             <span class="score-label">/100</span>
                         </div>
+                        <div class="score-animation" id="scoreAnimation"></div>
                     </div>
                     <div class="results-details">
                         <div class="result-item">

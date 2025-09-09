@@ -5,6 +5,10 @@ let currentQuestionIndex = 0;
 let userAnswers = [];
 let startTime = null;
 let timer = null;
+let quizTimer = null;
+let timeElapsed = 0;
+let isDarkMode = false;
+let isSoundEnabled = true;
 
 // DOM elements
 const categorySection = document.getElementById('categorySection');
@@ -25,6 +29,12 @@ const finalScore = document.getElementById('finalScore');
 const correctAnswers = document.getElementById('correctAnswers');
 const totalAnswers = document.getElementById('totalAnswers');
 const timeTaken = document.getElementById('timeTaken');
+const progressFill = document.getElementById('progressFill');
+const timerDisplay = document.getElementById('timerDisplay');
+const scoreCircle = document.getElementById('scoreCircle');
+const scoreAnimation = document.getElementById('scoreAnimation');
+const themeToggle = document.getElementById('themeToggle');
+const soundToggle = document.getElementById('soundToggle');
 
 // Category mapping
 const categoryNames = {
@@ -39,6 +49,8 @@ const categoryNames = {
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
     initializeEventListeners();
+    initializeTheme();
+    initializeSound();
     showCategorySection();
 });
 
@@ -61,6 +73,10 @@ function initializeEventListeners() {
     backToCategoriesBtn.addEventListener('click', showCategorySection);
     retryBtn.addEventListener('click', retryQuiz);
     newCategoryBtn.addEventListener('click', showCategorySection);
+    
+    // Theme and sound toggles
+    themeToggle.addEventListener('click', toggleTheme);
+    soundToggle.addEventListener('click', toggleSound);
 }
 
 // Show category selection
@@ -101,6 +117,9 @@ function startQuiz(category) {
     showQuizSection();
     displayCurrentQuestion();
     startTimer();
+    startQuizTimer();
+    updateProgressBar();
+    playSound('click');
 }
 
 // Show quiz section
@@ -173,11 +192,17 @@ function selectOption(optionIndex) {
     selectedOption.classList.add('selected');
     selectedOption.querySelector('input[type="radio"]').checked = true;
     
+    // Add animation
+    addPulseAnimation(selectedOption);
+    
     // Save answer
     userAnswers[currentQuestionIndex] = optionIndex;
     
     // Update navigation buttons
     updateNavigationButtons();
+    
+    // Play sound
+    playSound('click');
 }
 
 // Update navigation buttons
@@ -206,6 +231,8 @@ function goToNextQuestion() {
     if (currentQuestionIndex < currentQuestions.length - 1) {
         currentQuestionIndex++;
         displayCurrentQuestion();
+        updateProgressBar();
+        playSound('click');
     }
 }
 
@@ -213,6 +240,9 @@ function goToNextQuestion() {
 function submitQuiz() {
     const endTime = new Date();
     const timeSpent = Math.round((endTime - startTime) / 1000 / 60); // minutes
+    
+    // Stop timer
+    stopQuizTimer();
     
     // Calculate score
     let correctCount = 0;
@@ -226,6 +256,9 @@ function submitQuiz() {
     
     // Display results
     showResults(score, correctCount, currentQuestions.length, timeSpent);
+    
+    // Play completion sound
+    playSound('complete');
 }
 
 // Show results
@@ -239,13 +272,22 @@ function showResults(score, correct, total, timeSpent) {
     timeTaken.textContent = `${timeSpent} phút`;
     
     // Add score-based styling
-    const scoreCircle = document.querySelector('.score-circle');
-    if (score >= 80) {
-        scoreCircle.style.background = 'linear-gradient(135deg, #48bb78, #38a169)';
-    } else if (score >= 60) {
-        scoreCircle.style.background = 'linear-gradient(135deg, #f6ad55, #ed8936)';
-    } else {
-        scoreCircle.style.background = 'linear-gradient(135deg, #f56565, #e53e3e)';
+    if (scoreCircle) {
+        if (score >= 80) {
+            scoreCircle.style.background = 'linear-gradient(135deg, #48bb78, #38a169)';
+        } else if (score >= 60) {
+            scoreCircle.style.background = 'linear-gradient(135deg, #f6ad55, #ed8936)';
+        } else {
+            scoreCircle.style.background = 'linear-gradient(135deg, #f56565, #e53e3e)';
+        }
+        
+        // Add animations
+        addBounceAnimation(scoreCircle);
+        
+        // Create confetti for high scores
+        if (score >= 80) {
+            createConfetti();
+        }
     }
 }
 
@@ -253,6 +295,7 @@ function showResults(score, correct, total, timeSpent) {
 function retryQuiz() {
     if (currentCategory) {
         startQuiz(currentCategory);
+        playSound('click');
     }
 }
 
@@ -353,3 +396,179 @@ function addSmoothTransitions() {
 
 // Initialize smooth transitions
 addSmoothTransitions();
+
+// Theme management
+function initializeTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        toggleTheme();
+    }
+}
+
+function toggleTheme() {
+    isDarkMode = !isDarkMode;
+    document.body.classList.toggle('dark-mode', isDarkMode);
+    
+    const icon = themeToggle.querySelector('i');
+    icon.className = isDarkMode ? 'fas fa-sun' : 'fas fa-moon';
+    themeToggle.classList.toggle('active', isDarkMode);
+    
+    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+    playSound('click');
+}
+
+// Sound management
+function initializeSound() {
+    const savedSound = localStorage.getItem('sound');
+    if (savedSound === 'false') {
+        toggleSound();
+    }
+}
+
+function toggleSound() {
+    isSoundEnabled = !isSoundEnabled;
+    
+    const icon = soundToggle.querySelector('i');
+    icon.className = isSoundEnabled ? 'fas fa-volume-up' : 'fas fa-volume-mute';
+    soundToggle.classList.toggle('active', isSoundEnabled);
+    
+    localStorage.setItem('sound', isSoundEnabled);
+}
+
+function playSound(type) {
+    if (!isSoundEnabled) return;
+    
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    switch(type) {
+        case 'click':
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.1);
+            break;
+        case 'correct':
+            oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.1);
+            oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.2);
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.3);
+            break;
+        case 'incorrect':
+            oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+            oscillator.frequency.setValueAtTime(150, audioContext.currentTime + 0.1);
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.2);
+            break;
+        case 'complete':
+            // Play a success melody
+            const frequencies = [523, 659, 784, 1047]; // C, E, G, C
+            frequencies.forEach((freq, index) => {
+                setTimeout(() => {
+                    const osc = audioContext.createOscillator();
+                    const gain = audioContext.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioContext.destination);
+                    osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+                    gain.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioContext.currentTime + 0.3);
+                }, index * 100);
+            });
+            break;
+    }
+}
+
+// Progress bar update
+function updateProgressBar() {
+    if (!progressFill) return;
+    const progress = ((currentQuestionIndex + 1) / currentQuestions.length) * 100;
+    progressFill.style.width = `${progress}%`;
+}
+
+// Timer management
+function startQuizTimer() {
+    timeElapsed = 0;
+    updateTimerDisplay();
+    
+    quizTimer = setInterval(() => {
+        timeElapsed++;
+        updateTimerDisplay();
+    }, 1000);
+}
+
+function stopQuizTimer() {
+    if (quizTimer) {
+        clearInterval(quizTimer);
+        quizTimer = null;
+    }
+}
+
+function updateTimerDisplay() {
+    if (!timerDisplay) return;
+    
+    const minutes = Math.floor(timeElapsed / 60);
+    const seconds = timeElapsed % 60;
+    const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    
+    timerDisplay.textContent = timeString;
+    
+    // Add warning colors
+    const timerElement = timerDisplay.parentElement;
+    timerElement.classList.remove('warning', 'danger');
+    
+    if (timeElapsed > 300) { // 5 minutes
+        timerElement.classList.add('danger');
+    } else if (timeElapsed > 180) { // 3 minutes
+        timerElement.classList.add('warning');
+    }
+}
+
+// Confetti animation
+function createConfetti() {
+    if (!scoreAnimation) return;
+    
+    scoreAnimation.innerHTML = '';
+    const confettiCount = 50;
+    
+    for (let i = 0; i < confettiCount; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.animationDelay = Math.random() * 3 + 's';
+        confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+        scoreAnimation.appendChild(confetti);
+    }
+    
+    // Remove confetti after animation
+    setTimeout(() => {
+        scoreAnimation.innerHTML = '';
+    }, 5000);
+}
+
+// Enhanced animations
+function addPulseAnimation(element) {
+    element.classList.add('pulse');
+    setTimeout(() => element.classList.remove('pulse'), 600);
+}
+
+function addBounceAnimation(element) {
+    element.classList.add('bounce');
+    setTimeout(() => element.classList.remove('bounce'), 1000);
+}
+
+function addShakeAnimation(element) {
+    element.classList.add('shake');
+    setTimeout(() => element.classList.remove('shake'), 500);
+}
