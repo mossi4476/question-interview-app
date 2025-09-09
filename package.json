@@ -1,0 +1,44 @@
+{
+  "name": "technical-interview-practice",
+  "version": "1.0.0",
+  "description": "A comprehensive technical interview practice application with beautiful UI and diverse question sets",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx live-server --port=3000 --open=/index.html",
+    "build": "echo 'No build step required for static site'",
+    "test": "echo 'No tests specified'",
+    "lint": "npx htmlhint *.html && npx stylelint *.css && npx eslint *.js",
+    "format": "npx prettier --write .",
+    "serve": "npx live-server --port=8080 --open=/index.html"
+  },
+  "keywords": [
+    "technical-interview",
+    "practice",
+    "quiz",
+    "algorithms",
+    "javascript",
+    "react",
+    "system-design",
+    "database",
+    "networking"
+  ],
+  "author": "Technical Interview Practice Team",
+  "license": "MIT",
+  "devDependencies": {
+    "live-server": "^1.2.2",
+    "htmlhint": "^1.1.4",
+    "stylelint": "^15.11.0",
+    "stylelint-config-standard": "^34.0.0",
+    "eslint": "^8.55.0",
+    "prettier": "^3.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/technical-interview-practice.git"
+  },
+  "homepage": "https://your-app-name.netlify.app",
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  }
+}
