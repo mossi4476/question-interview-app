@@ -1,4 +1,4 @@
-name: Deploy to Netlify
+name: Simple Deploy to Netlify
 
 on:
   push:

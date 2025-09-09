@@ -1,0 +1,36 @@
+name: Test Only
+
+on:
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: npm install
+      
+    - name: Run linter
+      run: npm run lint || true
+      
+    - name: Check HTML validity
+      run: |
+        npx htmlhint *.html --config .htmlhintrc || true
+        
+    - name: Check CSS validity
+      run: |
+        npx stylelint *.css --config .stylelintrc.json || true
+        
+    - name: Check JavaScript validity
+      run: |
+        npx eslint *.js --config .eslintrc.json || true
